@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ class_info.name }} - LUYỆN THI ONLINE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="logo"></a>
+            <h1 class="logo-title">LUYỆN THI ONLINE</h1>
+            {% if session['username'] %}
+            <div class="user-info">
+                <img src="{{ url_for('static', filename='images/account.png') }}" alt="Avatar" class="user-avatar">
+                <span>{{ session['username'] }}</span>
+            </div>
+            {% else %}
+            <a href="{{ url_for('login') }}" class="auth-button">Đăng nhập</a>
+            {% endif %}
+        </div>
+    </header>
+    
+    <nav class="nav">
+        <ul class="nav-list">
+            <li><a href="{{ url_for('index') }}">Trang chủ</a></li>
+            <li><a href="{{ url_for('show_exams_page') }}">Luyện đề</a></li>
+            <li><a href="{{ url_for('document') }}">Tài liệu</a></li>
+            <li><a href="{{ url_for('class_page') }}" class="active">Lớp học</a></li>
+            <li><a href="{{ url_for('contact') }}">Liên hệ</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <div class="class-detail-container">
+            <div class="class-header">
+                <div>
+                    <h2>{{ class_info.name }}</h2>
+                    <p class="class-subject">{{ class_info.subject }}</p>
+                    <p class="class-teacher">Giáo viên: {{ class_info.creator_username }}</p>
+                </div>
+                
+                {% if session.get('is_admin') or session.get('is_teacher') %}
+                <a href="{{ url_for('manage_attendance', class_id=class_info.id) }}" class="btn-attendance">Điểm danh</a>
+                {% endif %}
+                
+                {% if not (session.get('is_admin') or session.get('is_teacher') or session.username == class_info.creator_username) %}
+                <form method="POST" action="{{ url_for('join_class', class_id=class_info.id) }}">
+                    <button type="submit" class="btn-join">Tham gia lớp</button>
+                </form>
+                {% endif %}
+            </div>
+
+            <div class="class-description">
+                <h3>Mô tả lớp học</h3>
+                <p>{{ class_info.description or 'Chưa có mô tả' }}</p>
+            </div>
+
+            {% if session.get('is_admin') or session.get('is_teacher') %}
+            <div class="invite-section">
+                <h3>Mời học sinh</h3>
+                <form method="POST" action="{{ url_for('invite_to_class', class_id=class_info.id) }}">
+                    <input type="text" name="contact" placeholder="Nhập email hoặc số điện thoại" required>
+                    <button type="submit">Mời</button>
+                </form>
+            </div>
+            {% endif %}
+
+            {% if show_attendance_report %}
+            <div class="class-actions">
+                <a href="{{ url_for('attendance_report', class_id=class_info.id) }}" class="btn-view-report">
+                    <i class="fas fa-chart-bar"></i> Xem báo cáo điểm danh
+                </a>
+            </div>
+            {% endif %}
+
+            <div class="class-tabs">
+                <div class="tab-buttons">
+                    <button class="tab-btn active" data-tab="members">Thành viên</button>
+                    <button class="tab-btn" data-tab="exams">Đề thi</button>
+                    <button class="tab-btn" data-tab="rankings">Xếp hạng</button>
+                    {% if join_requests %}
+                    <button class="tab-btn" data-tab="requests">Yêu cầu ({{ join_requests|length }})</button>
+                    {% endif %}
+                </div>
+
+                <div class="tab-content active" id="members-tab">
+                    <div class="member-list">
+                        {% for member in members %}
+                        <div class="member-item">
+                            <div class="member-avatar">
+                                <img src="{{ url_for('static', filename='images/user-default.png') }}" alt="Avatar">
+                            </div>
+                            <div class="member-info">
+                                <h4>{{ member.fullname }}</h4>
+                                <p>{{ member.username }}</p>
+                                <p>{{ member.email }}</p>
+                            </div>
+                            {% if member.username == class_info.creator_username %}
+                            <span class="role-teacher">Giáo viên</span>
+                            {% else %}
+                            <span class="role-student">Học sinh</span>
+                            {% endif %}
+                            {% if session.get('is_admin') or session.get('is_teacher') %}
+                                {% if member.username != class_info.creator_username %}
+                                <form method="POST" action="{{ url_for('remove_member', class_id=class_info.id, user_id=member.id) }}" 
+                                      onsubmit="return confirm('Bạn có chắc chắn muốn xóa học sinh này khỏi lớp?');">
+                                    <button type="submit" class="btn-remove">Xóa</button>
+                                </form>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="tab-content" id="exams-tab">
+                    <div class="exam-list">
+                        {% for exam in exams %}
+                        <div class="exam-item">
+                            <div class="exam-info">
+                                <h4>{{ exam.name }}</h4>
+                                <p>Môn: {{ exam.subject }}</p>
+                                <p>Thời gian: {{ exam.duration }} phút</p>
+                            </div>
+                            <a href="{{ url_for('take_exam', exam_id=exam.id) }}" class="btn-take-exam">Làm bài</a>
+                        </div>
+                        {% else %}
+                        <p class="no-exam">Lớp chưa có đề thi nào</p>
+                        {% endfor %}
+                    </div>
+                    
+                    {% if session.get('is_admin') or session.get('is_teacher') %}
+                    <div class="add-exam">
+                        <h4>Thêm đề thi vào lớp</h4>
+                        <form method="POST" action="{{ url_for('add_exam_to_class', class_id=class_info.id) }}">
+                            <select name="exam_id" required>
+                                <option value="">Chọn đề thi</option>
+                                {% for exam in all_exams %}
+                                <option value="{{ exam.id }}">{{ exam.name }} ({{ exam.subject }})</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit">Thêm</button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="tab-content" id="rankings-tab">
+                    <table class="ranking-table">
+                        <thead>
+                            <tr>
+                                <th>Hạng</th>
+                                <th>Học sinh</th>
+                                <th>Điểm TB</th>
+                                <th>Số bài</th>
+                                <th>Điểm danh</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for rank in rankings %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ rank.fullname }}</td>
+                                <td>{{ "%.1f"|format(rank.avg_score) }}</td>
+                                <td>{{ rank.exam_count }}</td>
+                                <td>
+                                    <span class="attendance-rate">
+                                        {{ "%.0f"|format(rank.attendance_rate) }}%
+                                    </span>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5">Chưa có dữ liệu xếp hạng</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if join_requests %}
+                <div class="tab-content" id="requests-tab">
+                    <div class="request-list">
+                        {% for request in join_requests %}
+                        <div class="request-item">
+                            <div class="request-info">
+                                <h4>{{ request.fullname }}</h4>
+                                <p>{{ request.username }}</p>
+                                <p>{{ request.request_time }}</p>
+                            </div>
+                            <div class="request-actions">
+                                <form method="POST" action="{{ url_for('approve_join_request', request_id=request.id) }}">
+                                    <button type="submit" class="btn-approve">Duyệt</button>
+                                </form>
+                                <form method="POST" action="{{ url_for('reject_join_request', request_id=request.id) }}">
+                                    <button type="submit" class="btn-reject">Từ chối</button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <ul class="footer-list">
+            <li><a href="{{ url_for('contact') }}">Thông tin liên hệ</a></li>
+            <li><a href="#">Mạng xã hội</a></li>
+            <li><a href="#">Điều khoản sử dụng</a></li>
+            <li><a href="#">Chính sách bảo mật</a></li>
+        </ul>
+    </footer>
+
+    <script>
+        // Tab switching functionality
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active class from all buttons and contents
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked button
+                btn.classList.add('active');
+                
+                // Show corresponding content
+                const tabId = btn.getAttribute('data-tab') + '-tab';
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

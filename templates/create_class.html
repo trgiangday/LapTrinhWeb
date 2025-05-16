@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tạo lớp học - LUYỆN THI ONLINE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="logo"></a>
+            <h1 class="logo-title">LUYỆN THI ONLINE</h1>
+            {% if session['username'] %}
+            <div class="user-info">
+                <img src="{{ url_for('static', filename='images/account.png') }}" alt="Avatar" class="user-avatar">
+                <span>{{ session['username'] }}</span>
+            </div>
+            {% else %}
+            <a href="{{ url_for('login') }}" class="auth-button">Đăng nhập</a>
+            {% endif %}
+        </div>
+    </header>
+    
+    <nav class="nav">
+        <ul class="nav-list">
+            <li><a href="{{ url_for('index') }}">Trang chủ</a></li>
+            <li><a href="{{ url_for('show_exams_page') }}">Luyện đề</a></li>
+            <li><a href="{{ url_for('document') }}">Tài liệu</a></li>
+            <li><a href="{{ url_for('class_page') }}" class="active">Lớp học</a></li>
+            <li><a href="{{ url_for('contact') }}">Liên hệ</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <div class="create-class-container">
+            <h2>Tạo lớp học mới</h2>
+            
+            <form method="POST" action="{{ url_for('create_class') }}" class="create-class-form">
+                <div class="form-group">
+                    <label for="class_name">Tên lớp học</label>
+                    <input type="text" id="class_name" name="class_name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="subject">Môn học</label>
+                    <select id="subject" name="subject" required>
+                        <option value="">Chọn môn học</option>
+                        <option value="Toán">Toán</option>
+                        <option value="Ngữ Văn">Ngữ Văn</option>
+                        <option value="Tiếng Anh">Tiếng Anh</option>
+                        <option value="Vật Lý">Vật Lý</option>
+                        <option value="Hóa Học">Hóa Học</option>
+                        <option value="Sinh Học">Sinh Học</option>
+                        <option value="Lịch Sử">Lịch Sử</option>
+                        <option value="Địa Lý">Địa Lý</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Mô tả lớp học</label>
+                    <textarea id="description" name="description" rows="4"></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn-submit">Tạo lớp</button>
+                    <a href="{{ url_for('class_list') }}" class="btn-cancel">Hủy</a>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <ul class="footer-list">
+            <li><a href="{{ url_for('contact') }}">Thông tin liên hệ</a></li>
+            <li><a href="#">Mạng xã hội</a></li>
+            <li><a href="#">Điều khoản sử dụng</a></li>
+            <li><a href="#">Chính sách bảo mật</a></li>
+        </ul>
+    </footer>
+</body>
+</html>

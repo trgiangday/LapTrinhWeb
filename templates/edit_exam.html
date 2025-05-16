@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chỉnh sửa đề thi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .main-create {
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .create-form {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .create-form h2 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group select,
+        .form-group input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .submit-button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        .submit-button:hover {
+            background-color: #0056b3;
+        }
+
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+
+        .flash-messages p {
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            text-align: center;
+        }
+
+        .flash-messages .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .flash-messages .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .flash-messages .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="web_logo" class="logo"></a>
+            <h1 class="inter-700 logo-title" id="logoTitle" data-url="{{ url_for('index') }}">LUYỆN THI ONLINE</h1>
+            {% if session['username'] %}
+            <div class="user-info" id="userInfo" data-user-url="{{ url_for('user_profile') }}">
+                <img src="{{ url_for('static', filename='images/account.png') }}" alt="user_avatar" class="user-avatar">
+                <span class="inter-600">{{ session['username'] }}</span>
+            </div>
+            {% else %}
+            <button class="auth-button inter-600 btn redirect-to-auth" data-auth-url="{{ url_for('login') }}">Đăng nhập</button>
+            {% endif %}
+        </div>
+    </header>
+    <nav class="nav">
+        <ul class="nav-list">
+            <li><a href="{{ url_for('index') }}" class="inter-600">Trang chủ</a></li>
+            <li><a href="{{ url_for('show_exams_page') }}" class="inter-600">Luyện đề</a></li>
+            <li><a href="{{ url_for('document') }}" class="inter-600">Tài liệu</a></li>
+            <li><a href="{{ url_for('contact') }}" class="inter-600">Liên hệ</a></li>
+        </ul>
+    </nav>
+    <main class="main main-create">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <p class="{{ category }}">{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% endwith %}
+        <div class="create-form">
+            <h2>Chỉnh sửa đề thi</h2>
+            <form method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="name">Tên đề thi:</label>
+                    <input type="text" id="name" name="name" value="{{ exam.name }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="subject">Môn học:</label>
+                    <select id="subject" name="subject" required>
+                        <option value="math" {% if exam.subject == 'math' %}selected{% endif %}>Toán</option>
+                        <option value="physics" {% if exam.subject == 'physics' %}selected{% endif %}>Lý</option>
+                        <option value="chemistry" {% if exam.subject == 'chemistry' %}selected{% endif %}>Hóa</option>
+                        <option value="literature" {% if exam.subject == 'literature' %}selected{% endif %}>Văn</option>
+                        <option value="english" {% if exam.subject == 'english' %}selected{% endif %}>Anh</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="grade">Lớp:</label>
+                    <select id="grade" name="grade" required>
+                        <option value="10" {% if exam.grade == '10' %}selected{% endif %}>Lớp 10</option>
+                        <option value="11" {% if exam.grade == '11' %}selected{% endif %}>Lớp 11</option>
+                        <option value="12" {% if exam.grade == '12' %}selected{% endif %}>Lớp 12</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="duration">Thời gian (phút):</label>
+                    <input type="number" id="duration" name="duration" value="{{ exam.duration }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="csv_file">File CSV (để trống nếu không thay đổi):</label>
+                    <input type="file" id="csv_file" name="csv_file" accept=".csv">
+                </div>
+                <button type="submit" class="submit-button">Cập nhật đề thi</button>
+            </form>
+        </div>
+    </main>
+    <footer class="footer">
+        <ul class="footer-list">
+            <li><a href="{{ url_for('contact') }}" class="inter-600">Thông tin liên hệ</a></li>
+            <li><a href="" class="inter-600">Mạng xã hội</a></li>
+            <li><a href="" class="inter-600">Điều khoản sử dụng</a></li>
+            <li><a href="" class="inter-600">Chính sách bảo mật</a></li>
+        </ul>
+    </footer>
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ĐĂNG NHẬP - LUYỆN THI ONLINE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="web_logo" class="logo"></a>
+            <h1 class="inter-700 logo-title" id="logoTitle" data-url="{{ url_for('index') }}">LUYỆN THI ONLINE</h1>
+            {% if session['username'] %}
+            <div class="user-info" id="userInfo" data-user-url="{{ url_for('user_profile') }}">
+                <img src="{{ url_for('static', filename='images/account.png') }}" alt="user_avatar" class="user-avatar">
+                <span class="inter-600">{{ session['username'] }}</span>
+            </div>
+            {% else %}
+            <button class="auth-button inter-600 btn redirect-to-auth" data-auth-url="{{ url_for('login') }}">Đăng nhập</button>
+            {% endif %}
+        </div>
+    </header>
+    <nav class="nav">
+        <ul class="nav-list">
+            <li><a href="{{ url_for('index') }}" class="inter-600">Trang chủ</a></li>
+            <li><a href="{{ url_for('show_exams_page') }}" class="inter-600">Luyện đề</a></li>
+            <li><a href="{{ url_for('document') }}" class="inter-600">Tài liệu</a></li>
+            <li><a href="{{ url_for('contact') }}" class="inter-600">Liên hệ</a></li>
+        </ul>
+    </nav>
+    <main class="main main-login">
+        <div class="login-container">
+            <h2 class="inter-700 login-title">Đăng nhập</h2>
+            {% if error %}
+            <p class="error">{{ error }}</p>
+            {% endif %}
+            <form class="login-form" method="post" action="{{ url_for('login') }}">
+                <div class="form-group">
+                    <label for="username" class="inter-600">Tên đăng nhập:</label>
+                    <input type="text" id="username" name="username" class="inter-400 login-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="password" class="inter-600">Mật khẩu:</label>
+                    <input type="password" id="password" name="password" class="inter-400 login-input" required>
+                </div>
+                <button type="submit" class="login-button inter-600 btn login-submit-button">Đăng nhập</button>
+            </form>
+            <!-- Thêm dòng "Quên mật khẩu" -->
+            <p class="inter-400"><a href="{{ url_for('forgot_password') }}" class="inter-600">Quên mật khẩu?</a></p>
+            
+            <p class="inter-400 signup-link">Chưa có tài khoản? <a href="{{ url_for('signup') }}" class="inter-600">Đăng ký ngay</a></p>
+        </div>
+    </main>
+    <footer class="footer">
+        <ul class="footer-list">
+            <li><a href="{{ url_for('contact') }}" class="inter-600">Thông tin liên hệ</a></li>
+            <li><a href="" class="inter-600">Mạng xã hội</a></li>
+            <li><a href="" class="inter-600">Điều khoản sử dụng</a></li>
+            <li><a href="" class="inter-600">Chính sách bảo mật</a></li>
+        </ul>
+    </footer>
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>

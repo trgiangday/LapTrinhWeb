@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Điểm danh - LUYỆN THI ONLINE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="logo"></a>
+            <h1 class="logo-title">LUYỆN THI ONLINE</h1>
+            {% if session['username'] %}
+            <div class="user-info">
+                <img src="{{ url_for('static', filename='images/account.png') }}" alt="Avatar" class="user-avatar">
+                <span>{{ session['username'] }}</span>
+            </div>
+            {% else %}
+            <a href="{{ url_for('login') }}" class="auth-button">Đăng nhập</a>
+            {% endif %}
+        </div>
+    </header>
+    
+    <nav class="nav">
+        <ul class="nav-list">
+            <li><a href="{{ url_for('index') }}">Trang chủ</a></li>
+            <li><a href="{{ url_for('show_exams_page') }}">Luyện đề</a></li>
+            <li><a href="{{ url_for('document') }}">Tài liệu</a></li>
+            <li><a href="{{ url_for('class_page') }}" class="active">Lớp học</a></li>
+            <li><a href="{{ url_for('contact') }}">Liên hệ</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <div class="attendance-container">
+            <div class="attendance-header">
+                <h2>Điểm danh lớp {{ class_info.name }}</h2>
+                <a href="{{ url_for('class_detail', class_id=class_info.id) }}" class="btn-back">Quay lại</a>
+            </div>
+
+            <form method="POST" action="{{ url_for('manage_attendance', class_id=class_info.id) }}">
+                <div class="form-group">
+                    <label for="date">Ngày điểm danh</label>
+                    <input type="date" id="date" name="date" required>
+                </div>
+
+                <div class="attendance-list">
+                    <h3>Danh sách học sinh</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Học sinh</th>
+                                <th>Có mặt</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for member in members %}
+                            <tr>
+                                <td>
+                                    <label for="member_{{ member.id }}">{{ member.fullname }} ({{ member.username }})</label>
+                                </td>
+                                <td>
+                                    <input type="checkbox" id="member_{{ member.id }}" 
+                                           name="present_users" value="{{ member.id }}">
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <button type="submit" class="btn-save">Lưu điểm danh</button>
+            </form>
+
+            {% if attendance_history %}
+            <div class="attendance-history">
+                <h3>Lịch sử điểm danh</h3>
+                <ul>
+                    {% for record in attendance_history %}
+                    <li>
+                        <span class="history-date">{{ record.date }}</span>
+                        <span class="history-present">{{ record.present_users }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <footer class="footer">
+        <ul class="footer-list">
+            <li><a href="{{ url_for('contact') }}">Thông tin liên hệ</a></li>
+            <li><a href="#">Mạng xã hội</a></li>
+            <li><a href="#">Điều khoản sử dụng</a></li>
+            <li><a href="#">Chính sách bảo mật</a></li>
+        </ul>
+    </footer>
+</body>
+</html>

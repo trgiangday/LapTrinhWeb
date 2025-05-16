@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1>Admin Dashboard</h1>
+            <a href="{{ url_for('index') }}">Về trang người dùng</a>
+        </div>
+    </header>
+    <main class="main main-admin">
+        <h2>Chào mừng, Administrator!</h2>
+        <ul>
+            <li><a href="{{ url_for('admin.manage_users') }}">Quản lý người dùng</a></li>
+            <li><a href="{{ url_for('admin.view_stats') }}">Thống kê người dùng</a></li>
+            </ul>
+    </main>
+    <footer class="footer">
+        <p>&copy; Website Admin</p>
+    </footer>
+</body>
+</html>

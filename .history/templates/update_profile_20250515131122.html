@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cập nhật thông tin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="web_logo" class="logo"></a>
+            <h1 class="inter-700 logo-title" id="logoTitle" data-url="{{ url_for('index') }}">LUYỆN THI ONLINE</h1>
+            {% if session['username'] %}
+            <div class="user-info" id="userInfo" data-user-url="{{ url_for('user_profile') }}">
+                <img src="{{ url_for('static', filename='images/account.png') }}" alt="user_avatar" class="user-avatar">
+                <span class="inter-600">{{ session['username'] }}</span>
+            </div>
+            {% else %}
+            <button class="auth-button inter-600 btn redirect-to-auth" data-auth-url="{{ url_for('login') }}">Đăng nhập</button>
+            {% endif %}
+        </div>
+    </header>
+    <nav class="nav">
+        <ul class="nav-list">
+            <li><a href="{{ url_for('index') }}" class="inter-600">Trang chủ</a></li>
+            <li><a href="{{ url_for('show_exams_page') }}" class="inter-600">Luyện đề</a></li>
+            <li><a href="{{ url_for('document') }}" class="inter-600">Tài liệu</a></li>
+            <li><a href="{{ url_for('contact') }}" class="inter-600">Liên hệ</a></li>
+        </ul>
+    </nav>
+    <main class="main main-user">
+        <div class="user-profile-container">
+            <h2 class="user-profile-title">Cập nhật thông tin tài khoản</h2>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            <form method="POST" action="{{ url_for('update_profile') }}" class="signup-form">
+                <div class="form-group">
+                    <label for="fullname" class="inter-600">Họ tên:</label>
+                    <input type="text" id="fullname" name="fullname" value="{{ user_data['fullname'] }}" class="signup-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="email" class="inter-600">Email:</label>
+                    <input type="email" id="email" name="email" value="{{ user_data['email'] }}" class="signup-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone" class="inter-600">Số điện thoại:</label>
+                    <input type="text" id="phone" name="phone" value="{{ user_data['phone'] }}" class="signup-input" required>
+                </div>
+                <button type="submit outras-formas" class="signup-submit-button inter-600">Cập nhật</button>
+            </form>
+            <a href="{{ url_for('user_profile') }}" class="logout-button inter-600" style="background-color: #6c757d;">Quay lại hồ sơ</a>
+        </div>
+    </main>
+    <footer class="footer">
+        <ul class="footer-list">
+            <li><a href="{{ url_for('contact') }}" class="inter-600">Thông tin liên hệ</a></li>
+            <li><a href="" class="inter-600">Mạng xã hội</a></li>
+            <li><a href="" class="inter-600">Điều khoản sử dụng</a></li>
+            <li><a href="" class="inter-600">Chính sách bảo mật</a></li>
+        </ul>
+    </footer>
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xem điểm danh - LUYỆN THI ONLINE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="logo"></a>
+            <h1 class="logo-title">LUYỆN THI ONLINE</h1>
+            {% if session['username'] %}
+            <div class="user-info">
+                <img src="{{ url_for('static', filename='images/account.png') }}" alt="Avatar" class="user-avatar">
+                <span>{{ session['username'] }}</span>
+            </div>
+            {% else %}
+            <a href="{{ url_for('login') }}" class="auth-button">Đăng nhập</a>
+            {% endif %}
+        </div>
+    </header>
+    
+    <nav class="nav">
+        <ul class="nav-list">
+            <li><a href="{{ url_for('index') }}">Trang chủ</a></li>
+            <li><a href="{{ url_for('show_exams_page') }}">Luyện đề</a></li>
+            <li><a href="{{ url_for('document') }}">Tài liệu</a></li>
+            <li><a href="{{ url_for('class_page') }}" class="active">Lớp học</a></li>
+            <li><a href="{{ url_for('contact') }}">Liên hệ</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <div class="attendance-container">
+            <div class="attendance-header">
+                <h2>Điểm danh lớp {{ class_info.name }}</h2>
+                <a href="{{ url_for('class_detail', class_id=class_info.id) }}" class="btn-back">Quay lại</a>
+            </div>
+
+            {% if not is_teacher %}
+            <div class="student-attendance">
+                <h3>Điểm danh của bạn</h3>
+                <form method="POST" action="{{ url_for('mark_attendance', class_id=class_info.id) }}" class="attendance-form">
+                    <div class="form-group">
+                        <label for="date">Ngày điểm danh</label>
+                        <input type="date" id="date" name="date" required value="{{ today }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Trạng thái</label>
+                        <div class="radio-group">
+                            <label>
+                                <input type="radio" name="status" value="present" checked> Có mặt
+                            </label>
+                            <label>
+                                <input type="radio" name="status" value="absent"> Vắng mặt
+                            </label>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-submit">Điểm danh</button>
+                </form>
+            </div>
+            {% endif %}
+
+            <div class="attendance-history">
+                <h3>Lịch sử điểm danh</h3>
+                <table class="attendance-table">
+                    <thead>
+                        <tr>
+                            <th>Ngày</th>
+                            {% if is_teacher %}
+                            <th>Học sinh</th>
+                            {% endif %}
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in attendance_records %}
+                        <tr>
+                            <td>{{ record.date }}</td>
+                            {% if is_teacher %}
+                            <td>{{ record.fullname }} ({{ record.username }})</td>
+                            {% endif %}
+                            <td>
+                                <span class="status-badge {{ record.status }}">
+                                    {{ 'Có mặt' if record.status == 'present' else 'Vắng mặt' }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="{{ 3 if is_teacher else 2 }}">Chưa có lịch sử điểm danh</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <ul class="footer-list">
+            <li><a href="{{ url_for('contact') }}">Thông tin liên hệ</a></li>
+            <li><a href="#">Mạng xã hội</a></li>
+            <li><a href="#">Điều khoản sử dụng</a></li>
+            <li><a href="#">Chính sách bảo mật</a></li>
+        </ul>
+    </footer>
+</body>
+</html> 

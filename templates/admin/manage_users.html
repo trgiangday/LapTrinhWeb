@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý người dùng</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .main-admin {
+            padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .users-table th, .users-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        .users-table th {
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        .users-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .action-button {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            color: white;
+            font-size: 0.9em;
+            margin-right: 5px;
+        }
+
+        .promote-button {
+            background-color: #28a745;
+        }
+
+        .promote-button:hover {
+            background-color: #218838;
+        }
+
+        .demote-button {
+            background-color: #dc3545;
+        }
+
+        .demote-button:hover {
+            background-color: #c82333;
+        }
+
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+
+        .flash-messages p {
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            text-align: center;
+        }
+
+        .flash-messages .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .flash-messages .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="web_logo" class="logo"></a>
+            <h1 class="inter-700 logo-title" id="logoTitle" data-url="{{ url_for('index') }}">LUYỆN THI ONLINE</h1>
+            <div class="user-info" id="userInfo" data-user-url="{{ url_for('user_profile') }}">
+                <img src="{{ url_for('static', filename='images/account.png') }}" alt="user_avatar" class="user-avatar">
+                <span class="inter-600">{{ session['username'] }}</span>
+            </div>
+        </div>
+    </header>
+    <nav class="nav">
+        <ul class="nav-list">
+            <li><a href="{{ url_for('admin.index') }}" class="inter-600">Bảng điều khiển</a></li>
+            <li><a href="{{ url_for('admin.manage_users') }}" class="inter-600">Quản lý người dùng</a></li>
+            <li><a href="{{ url_for('admin.view_stats') }}" class="inter-600">Thống kê</a></li>
+        </ul>
+    </nav>
+    <main class="main main-admin">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <p class="{{ category }}">{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% endwith %}
+        <h2>Quản lý người dùng</h2>
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tên đăng nhập</th>
+                    <th>Họ tên</th>
+                    <th>Email</th>
+                    <th>Admin</th>
+                    <th>Giáo viên</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.fullname }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ 'Có' if user.is_admin else 'Không' }}</td>
+                    <td>{{ 'Có' if user.is_teacher else 'Không' }}</td>
+                    <td>
+                        {% if user.is_admin %}
+                        <a href="{{ url_for('admin.demote_user', username=user.username) }}" class="action-button demote-button">Hạ cấp Admin</a>
+                        {% else %}
+                        <a href="{{ url_for('admin.promote_user', username=user.username) }}" class="action-button promote-button">Nâng cấp Admin</a>
+                        {% endif %}
+                        {% if user.is_teacher and not user.is_admin %}
+                        <a href="{{ url_for('admin.demote_teacher', username=user.username) }}" class="action-button demote-button">Hạ cấp Giáo viên</a>
+                        {% elif not user.is_teacher %}
+                        <a href="{{ url_for('admin.promote_teacher', username=user.username) }}" class="action-button promote-button">Nâng cấp Giáo viên</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </main>
+    <footer class="footer">
+        <ul class="footer-list">
+            <li><a href="{{ url_for('contact') }}" class="inter-600">Thông tin liên hệ</a></li>
+            <li><a href="" class="inter-600">Mạng xã hội</a></li>
+            <li><a href="" class="inter-600">Điều khoản sử dụng</a></li>
+            <li><a href="" class="inter-600">Chính sách bảo mật</a></li>
+        </ul>
+    </footer>
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>

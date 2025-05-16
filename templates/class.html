@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lớp học - LUYỆN THI ONLINE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="logo"></a>
+            <h1 class="logo-title">LUYỆN THI ONLINE</h1>
+            {% if session['username'] %}
+            <div class="user-info">
+                <img src="{{ url_for('static', filename='images/account.png') }}" alt="Avatar" class="user-avatar">
+                <span>{{ session['username'] }}</span>
+            </div>
+            {% else %}
+            <a href="{{ url_for('login') }}" class="auth-button">Đăng nhập</a>
+            {% endif %}
+        </div>
+    </header>
+    
+    <nav class="nav">
+        <ul class="nav-list">
+            <li><a href="{{ url_for('index') }}">Trang chủ</a></li>
+            <li><a href="{{ url_for('show_exams_page') }}">Luyện đề</a></li>
+            <li><a href="{{ url_for('document') }}">Tài liệu</a></li>
+            <li><a href="{{ url_for('class_page') }}" class="active">Lớp học</a></li>
+            <li><a href="{{ url_for('contact') }}">Liên hệ</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <div class="class-container">
+            <div class="class-header">
+                <h2>Quản lý lớp học</h2>
+                {% if session.get('is_admin') or session.get('is_teacher') %}
+                <a href="{{ url_for('create_class') }}" class="btn-create-class">+ Tạo lớp mới</a>
+                {% endif %}
+            </div>
+
+            <div class="class-list">
+                <h3>Lớp học của tôi</h3>
+                {% if classes %}
+                <div class="class-grid">
+                    {% for class in classes %}
+                    <div class="class-card">
+                        <div class="class-info">
+                            <h4>{{ class.name }}</h4>
+                            <p class="subject">{{ class.subject }}</p>
+                            <p class="teacher">Giáo viên: {{ class.creator_username }}</p>
+                            <p class="members">{{ class.member_count }} thành viên</p>
+                        </div>
+                        <a href="{{ url_for('class_detail', class_id=class.id) }}" class="btn-view">Xem chi tiết</a>
+                        {% if not (session.get('is_admin') or session.get('is_teacher') or session.get('username') == class.creator_username) %}
+                        <form method="POST" action="{{ url_for('join_class', class_id=class.id) }}" style="margin-top: 8px;">
+                            <button type="submit" class="btn-join">Tham gia lớp</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="no-class">Bạn chưa tham gia lớp học nào</p>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <ul class="footer-list">
+            <li><a href="{{ url_for('contact') }}">Thông tin liên hệ</a></li>
+            <li><a href="#">Mạng xã hội</a></li>
+            <li><a href="#">Điều khoản sử dụng</a></li>
+            <li><a href="#">Chính sách bảo mật</a></li>
+        </ul>
+    </footer>
+</body>
+</html>

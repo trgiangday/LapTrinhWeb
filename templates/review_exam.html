@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xem lại bài làm: {{ exam_name }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .main-review {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .question {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+        }
+
+        .question.correct {
+            border-left: 5px solid #28a745;
+        }
+
+        .question.incorrect {
+            border-left: 5px solid #dc3545;
+        }
+
+        .question h4 {
+            margin-top: 0;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .answers {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .answer-item {
+            margin-bottom: 8px;
+        }
+
+        .answer-item.correct {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .answer-item.incorrect {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .answer-item.user-answer::after {
+            content: " (Câu trả lời của bạn)";
+            font-style: italic;
+            font-weight: normal;
+        }
+
+        .back-button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+            margin-top: 20px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .back-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="web_logo" class="logo"></a>
+            <h1 class="inter-700 logo-title" id="logoTitle" data-url="{{ url_for('index') }}">LUYỆN THI ONLINE</h1>
+            {% if session['username'] %}
+            <div class="user-info" id="userInfo" data-user-url="{{ url_for('user_profile') }}">
+                <img src="{{ url_for('static', filename='images/account.png') }}" alt="user_avatar" class="user-avatar">
+                <span class="inter-600">{{ session['username'] }}</span>
+            </div>
+            {% else %}
+            <button class="auth-button inter-600 btn redirect-to-auth" data-auth-url="{{ url_for('login') }}">Đăng nhập</button>
+            {% endif %}
+        </div>
+    </header>
+    <nav class="nav">
+        <ul class="nav-list">
+            <li><a href="{{ url_for('index') }}" class="inter-600">Trang chủ</a></li>
+            <li><a href="{{ url_for('show_exams_page') }}" class="inter-600">Luyện đề</a></li>
+            <li><a href="{{ url_for('document') }}" class="inter-600">Tài liệu</a></li>
+            <li><a href="{{ url_for('contact') }}" class="inter-600">Liên hệ</a></li>
+        </ul>
+    </nav>
+    <main class="main main-review">
+        <h2>Xem lại bài làm: {{ exam_name }}</h2>
+        {% for question in questions %}
+        <div class="question {{ 'correct' if question.is_correct else 'incorrect' }}">
+            <h4>Câu {{ loop.index }}: {{ question.question }}</h4>
+            <ul class="answers">
+                {% if question.answer_a %}
+                <li class="answer-item {{ 'correct' if question.correct_answer == 'A' else '' }} {{ 'user-answer' if question.user_answer == 'A' else '' }}">
+                    A. {{ question.answer_a }}
+                </li>
+                {% endif %}
+                {% if question.answer_b %}
+                <li class="answer-item {{ 'correct' if question.correct_answer == 'B' else '' }} {{ 'user-answer' if question.user_answer == 'B' else '' }}">
+                    B. {{ question.answer_b }}
+                </li>
+                {% endif %}
+                {% if question.answer_c %}
+                <li class="answer-item {{ 'correct' if question.correct_answer == 'C' else '' }} {{ 'user-answer' if question.user_answer == 'C' else '' }}">
+                    C. {{ question.answer_c }}
+                </li>
+                {% endif %}
+                {% if question.answer_d %}
+                <li class="answer-item {{ 'correct' if question.correct_answer == 'D' else '' }} {{ 'user-answer' if question.user_answer == 'D' else '' }}">
+                    D. {{ question.answer_d }}
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+        {% endfor %}
+        <a href="{{ url_for('show_exams_page') }}" class="back-button">Quay lại danh sách đề</a>
+    </main>
+    <footer class="footer">
+        <ul class="footer-list">
+            <li><a href="{{ url_for('contact') }}" class="inter-600">Thông tin liên hệ</a></li>
+            <li><a href="" class="inter-600">Mạng xã hội</a></li>
+            <li><a href="" class="inter-600">Điều khoản sử dụng</a></li>
+            <li><a href="" class="inter-600">Chính sách bảo mật</a></li>
+        </ul>
+    </footer>
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>

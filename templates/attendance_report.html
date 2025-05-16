@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo cáo điểm danh - {{ class_info.name }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .attendance-report-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .btn-back {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-back:hover {
+            background-color: #45a049;
+        }
+
+        .attendance-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .attendance-table th,
+        .attendance-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .attendance-table th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .status-badge.present {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .status-badge.absent {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .attendance-rate {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .attendance-rate.high {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .attendance-rate.medium {
+            background-color: #FFC107;
+            color: black;
+        }
+
+        .attendance-rate.low {
+            background-color: #f44336;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="attendance-report-container">
+        <div class="report-header">
+            <h2>Báo cáo điểm danh - {{ class_info.name }}</h2>
+            <a href="{{ url_for('class_detail', class_id=class_info.id) }}" class="btn-back">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </a>
+        </div>
+
+        <div class="report-content">
+            <table class="attendance-table">
+                <thead>
+                    <tr>
+                        <th>Học sinh</th>
+                        {% for date in dates %}
+                        <th>{{ date.date }}</th>
+                        {% endfor %}
+                        <th>Tổng số buổi</th>
+                        <th>Điểm danh</th>
+                        <th>Tỷ lệ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td>{{ student.fullname }}</td>
+                        {% for date in dates %}
+                        <td>
+                            {% if date.date in attendance_data[student.id].attendance %}
+                                {% if attendance_data[student.id].attendance[date.date] == 'present' %}
+                                    <span class="status-badge present">Có mặt</span>
+                                {% else %}
+                                    <span class="status-badge absent">Vắng mặt</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="status-badge">-</span>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                        <td>{{ attendance_data[student.id].total_days }}</td>
+                        <td>{{ attendance_data[student.id].total_present }}</td>
+                        <td>
+                            {% set rate = (attendance_data[student.id].total_present / attendance_data[student.id].total_days * 100) if attendance_data[student.id].total_days > 0 else 0 %}
+                            <span class="attendance-rate {% if rate >= 80 %}high{% elif rate >= 60 %}medium{% else %}low{% endif %}">
+                                {{ "%.1f"|format(rate) }}%
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

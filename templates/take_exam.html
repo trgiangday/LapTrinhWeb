@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Làm đề: {{ exam.name }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .main-take-exam {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .timer {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .question {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+        }
+
+        .question h4 {
+            margin-top: 0;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .answers {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .answer-item {
+            margin-bottom: 8px;
+        }
+
+        .answer-item input[type="radio"] {
+            margin-right: 5px;
+        }
+
+        .submit-button {
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+            display: block;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .submit-button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="web_logo" class="logo"></a>
+            <h1 class="inter-700 logo-title" id="logoTitle" data-url="{{ url_for('index') }}">LUYỆN THI ONLINE</h1>
+            {% if session['username'] %}
+            <div class="user-info" id="userInfo" data-user-url="{{ url_for('user_profile') }}">
+                <img src="{{ url_for('static', filename='images/account.png') }}" alt="user_avatar" class="user-avatar">
+                <span class="inter-600">{{ session['username'] }}</span>
+            </div>
+            {% else %}
+            <button class="auth-button inter-600 btn redirect-to-auth" data-auth-url="{{ url_for('login') }}">Đăng nhập</button>
+            {% endif %}
+        </div>
+    </header>
+    <nav class="nav">
+        <ul class="nav-list">
+            <li><a href="{{ url_for('index') }}" class="inter-600">Trang chủ</a></li>
+            <li><a href="{{ url_for('show_exams_page') }}" class="inter-600">Luyện đề</a></li>
+            <li><a href="{{ url_for('document') }}" class="inter-600">Tài liệu</a></li>
+            <li><a href="{{ url_for('contact') }}" class="inter-600">Liên hệ</a></li>
+        </ul>
+    </nav>
+    <main class="main main-take-exam">
+        <h2>{{ exam.name }}</h2>
+        <div class="timer" id="timer">Thời gian còn lại: {{ exam.duration }} phút 00 giây</div>
+        <form method="POST" action="{{ url_for('submit_exam', exam_id=exam['id']) }}">
+        {% for question_data in questions %}
+        <div class="question">
+            <h4>Câu {{ loop.index }}: {{ question_data['Câu hỏi'] }}</h4>
+            <ul class="answers">
+                {% if question_data['Đáp án A'] %}
+                <li class="answer-item">
+                    <input type="radio" id="q{{ loop.index }}_a" name="{{ question_data['Câu hỏi'] }}" value="A">
+                    <label for="q{{ loop.index }}_a">A. {{ question_data['Đáp án A'] }}</label>
+                </li>
+                {% endif %}
+                {% if question_data['Đáp án B'] %}
+                <li class="answer-item">
+                    <input type="radio" id="q{{ loop.index }}_b" name="{{ question_data['Câu hỏi'] }}" value="B">
+                    <label for="q{{ loop.index }}_b">B. {{ question_data['Đáp án B'] }}</label>
+                </li>
+                {% endif %}
+                {% if question_data['Đáp án C'] %}
+                <li class="answer-item">
+                    <input type="radio" id="q{{ loop.index }}_c" name="{{ question_data['Câu hỏi'] }}" value="C">
+                    <label for="q{{ loop.index }}_c">C. {{ question_data['Đáp án C'] }}</label>
+                </li>
+                {% endif %}
+                {% if question_data['Đáp án D'] %}
+                <li class="answer-item">
+                    <input type="radio" id="q{{ loop.index }}_d" name="{{ question_data['Câu hỏi'] }}" value="D">
+                    <label for="q{{ loop.index }}_d">D. {{ question_data['Đáp án D'] }}</label>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+        {% endfor %}    
+            <button type="submit" class="submit-button">Nộp bài</button>
+        </form>
+    </main>
+    <footer class="footer">
+        <ul class="footer-list">
+            <li><a href="{{ url_for('contact') }}" class="inter-600">Thông tin liên hệ</a></li>
+            <li><a href="" class="inter-600">Mạng xã hội</a></li>
+            <li><a href="" class="inter-600">Điều khoản sử dụng</a></li>
+            <li><a href="" class="inter-600">Chính sách bảo mật</a></li>
+        </ul>
+    </footer>
+    <script>
+        const durationMinutes = {{ exam.duration }};
+        let timeRemaining = durationMinutes * 60;
+        const timerDisplay = document.getElementById('timer');
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            timerDisplay.textContent = `Thời gian còn lại: ${minutes.toString().padStart(2, '0')} phút ${seconds.toString().padStart(2, '0')} giây`;
+        }
+
+        function checkTimeRemaining() {
+            if (timeRemaining <= 0) {
+                alert('Hết giờ làm bài!');
+                document.forms[0].submit(); // Tự động nộp bài
+            }
+        }
+
+        function countdown() {
+            updateTimerDisplay();
+            checkTimeRemaining();
+            if (timeRemaining > 0) {
+                timeRemaining--;
+                setTimeout(countdown, 1000);
+            }
+        }
+
+        countdown(); // Bắt đầu đếm ngược
+    </script>
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>

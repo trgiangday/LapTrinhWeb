@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tạo đề thi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .main-create-exam {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .create-exam-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+
+        .form-group input[type="text"],
+        .form-group select {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        .questions-container {
+            margin-top: 20px;
+        }
+
+        .question-group {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: white;
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .question-header h4 {
+            margin: 0;
+        }
+
+        .answer-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .answer-group label {
+            margin-right: 5px;
+            color: #555;
+        }
+
+        .add-question-button,
+        .submit-exam-button {
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        .add-question-button:hover,
+        .submit-exam-button:hover {
+            background-color: #218838;
+        }
+
+        .remove-question-button {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+        }
+
+        .remove-question-button:hover {
+            background-color: #c82333;
+        }
+
+        .correct-answer-radio {
+            margin-right: 5px;
+        }
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="web_logo" class="logo"></a>
+            <h1 class="inter-700 logo-title" id="logoTitle" data-url="{{ url_for('index') }}">LUYỆN THI ONLINE</h1>
+            {% if session['username'] %}
+            <div class="user-info" id="userInfo" data-user-url="{{ url_for('user_profile') }}">
+                <img src="{{ url_for('static', filename='images/account.png') }}" alt="user_avatar" class="user-avatar">
+                <span class="inter-600">{{ session['username'] }}</span>
+            </div>
+            {% else %}
+            <button class="auth-button inter-600 btn redirect-to-auth" data-auth-url="{{ url_for('login') }}">Đăng nhập</button>
+            {% endif %}
+        </div>
+    </header>
+    <nav class="nav">
+        <ul class="nav-list">
+            <li><a href="{{ url_for('index') }}" class="inter-600">Trang chủ</a></li>
+            <li><a href="{{ url_for('show_exams_page') }}" class="inter-600">Luyện đề</a></li>
+            <li><a href="{{ url_for('document') }}" class="inter-600">Tài liệu</a></li>
+            <li><a href="{{ url_for('contact') }}" class="inter-600">Liên hệ</a></li>
+        </ul>
+    </nav>
+    <main class="main main-create-exam">
+        <h2>Tạo đề thi mới</h2>
+        <form class="create-exam-form" method="POST" action="{{ url_for('save_exam') }}">
+            <div class="form-group">
+                <label for="exam_name">Tên đề thi:</label>
+                <input type="text" id="exam_name" name="exam_name" required>
+            </div>
+            <div class="form-group">
+                <label for="exam_subject">Môn học:</label>
+                <select id="exam_subject" name="exam_subject" required>
+                    <option value="math">Toán</option>
+                    <option value="physics">Lý</option>
+                    <option value="chemistry">Hóa</option>
+                    <option value="literature">Văn</option>
+                    <option value="english">Anh</option>
+                    </select>
+            </div>
+            <div class="form-group">
+                <label for="exam_grade">Đối tượng (Lớp):</label>
+                <select id="exam_grade" name="exam_grade" required>
+                    <option value="10">Lớp 10</option>
+                    <option value="11">Lớp 11</option>
+                    <option value="12">Lớp 12</option>
+                    </select>
+            </div>
+            <div class="form-group">
+                <label for="exam_duration">Thời gian làm đề (phút):</label>
+                <input type="number" id="exam_duration" name="exam_duration" min="1" required>
+            </div>
+
+            <div class="questions-container" id="questionsContainer">
+                <div class="question-group">
+                    <div class="question-header">
+                        <h4>Câu 1:</h4>
+                        <button type="button" class="remove-question-button" onclick="removeQuestion(this)">Xóa</button>
+                    </div>
+                    <div class="form-group">
+                        <label for="question_1">Nội dung câu hỏi:</label>
+                        <input type="text" id="question_1" name="questions[0][question]" required>
+                    </div>
+                    <div class="answer-group">
+                        <input type="radio" name="questions[0][correct_answer]" value="A" class="correct-answer-radio" required>
+                        <label for="answer_a_1">A, <input type="text" id="answer_a_1" name="questions[0][answers][A]" required></label>
+                    </div>
+                    <div class="answer-group">
+                        <input type="radio" name="questions[0][correct_answer]" value="B" class="correct-answer-radio">
+                        <label for="answer_b_1">B, <input type="text" id="answer_b_1" name="questions[0][answers][B]" required></label>
+                    </div>
+                    <div class="answer-group">
+                        <input type="radio" name="questions[0][correct_answer]" value="C" class="correct-answer-radio">
+                        <label for="answer_c_1">C, <input type="text" id="answer_c_1" name="questions[0][answers][C]"></label>
+                    </div>
+                    <div class="answer-group">
+                        <input type="radio" name="questions[0][correct_answer]" value="D" class="correct-answer-radio">
+                        <label for="answer_d_1">D, <input type="text" id="answer_d_1" name="questions[0][answers][D]"></label>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="add-question-button" onclick="addQuestion()">+ Thêm câu hỏi</button>
+            <button type="submit" class="submit-exam-button">Xác nhận tạo đề</button>
+        </form>
+    </main>
+    <footer class="footer">
+        <ul class="footer-list">
+            <li><a href="{{ url_for('contact') }}" class="inter-600">Thông tin liên hệ</a></li>
+            <li><a href="" class="inter-600">Mạng xã hội</a></li>
+            <li><a href="" class="inter-600">Điều khoản sử dụng</a></li>
+            <li><a href="" class="inter-600">Chính sách bảo mật</a></li>
+        </ul>
+    </footer>
+    <script>
+        let questionCounter = 1;
+
+        function addQuestion() {
+            questionCounter++;
+            const questionsContainer = document.getElementById('questionsContainer');
+            const newQuestion = document.createElement('div');
+            newQuestion.classList.add('question-group');
+            newQuestion.innerHTML = `
+                <div class="question-header">
+                    <h4>Câu ${questionCounter}:</h4>
+                    <button type="button" class="remove-question-button" onclick="removeQuestion(this)">Xóa</button>
+                </div>
+                <div class="form-group">
+                    <label for="question_${questionCounter}">Nội dung câu hỏi:</label>
+                    <input type="text" id="question_${questionCounter}" name="questions[${questionCounter - 1}][question]" required>
+                </div>
+                <div class="answer-group">
+                    <input type="radio" name="questions[${questionCounter - 1}][correct_answer]" value="A" class="correct-answer-radio" required>
+                    <label for="answer_a_${questionCounter}">A, <input type="text" id="answer_a_${questionCounter}" name="questions[${questionCounter - 1}][answers][A]" required></label>
+                </div>
+                <div class="answer-group">
+                    <input type="radio" name="questions[${questionCounter - 1}][correct_answer]" value="B" class="correct-answer-radio">
+                    <label for="answer_b_${questionCounter}">B, <input type="text" id="answer_b_${questionCounter}" name="questions[${questionCounter - 1}][answers][B]" required></label>
+                </div>
+                <div class="answer-group">
+                    <input type="radio" name="questions[${questionCounter - 1}][correct_answer]" value="C" class="correct-answer-radio">
+                    <label for="answer_c_${questionCounter}">C, <input type="text" id="answer_c_${questionCounter}" name="questions[${questionCounter - 1}][answers][C]"></label>
+                </div>
+                <div class="answer-group">
+                    <input type="radio" name="questions[${questionCounter - 1}][correct_answer]" value="D" class="correct-answer-radio">
+                    <label for="answer_d_${questionCounter}">D, <input type="text" id="answer_d_${questionCounter}" name="questions[${questionCounter - 1}][answers][D]"></label>
+                </div>
+            `;
+            questionsContainer.appendChild(newQuestion);
+        }
+
+        function removeQuestion(button) {
+            const questionGroup = button.parentNode.parentNode;
+            questionGroup.remove();
+            // Cập nhật lại số thứ tự câu hỏi (tùy chọn)
+            const allQuestionGroups = document.querySelectorAll('.question-group');
+            allQuestionGroups.forEach((group, index) => {
+                const header = group.querySelector('.question-header h4');
+                if (header) {
+                    header.textContent = `Câu ${index + 1}:`;
+                }
+                const questionLabel = group.querySelector('label[for^="question_"]');
+                if (questionLabel) {
+                    questionLabel.setAttribute('for', `question_${index + 1}`);
+                }
+                const questionInput = group.querySelector('input[id^="question_"]');
+                if (questionInput) {
+                    questionInput.setAttribute('id', `question_${index + 1}`);
+                    questionInput.setAttribute('name', `questions[${index}][question]`);
+                }
+                // Tương tự cho các label và input của đáp án (nếu cần cập nhật ID/name phức tạp)
+                const answerRadios = group.querySelectorAll('input[type="radio"]');
+                answerRadios.forEach(radio => {
+                    const nameParts = radio.name.split('[');
+                    radio.name = `questions[${index}][${nameParts[2]}`;
+                });
+            });
+            questionCounter = allQuestionGroups.length;
+        }
+    </script>
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>

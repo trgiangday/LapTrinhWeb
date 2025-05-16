@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đề thi: {{ exam.name }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .main-exam {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .exam-info {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+        }
+
+        .exam-info p {
+            margin-bottom: 8px;
+        }
+
+        .questions-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .question-item {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+        }
+
+        .question-item h4 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .answers-list {
+            list-style: none;
+            padding-left: 20px;
+        }
+
+        .answer-item {
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        .correct-answer {
+            font-weight: bold;
+            color: green;
+        }
+
+        .edit-button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-bottom: 20px;
+            transition: background-color 0.3s ease;
+        }
+
+        .edit-button:hover {
+            background-color: #0056b3;
+        }
+
+        .edit-form {
+            display: none;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+
+        .edit-form.active {
+            display: block;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+
+        .form-group input[type="text"],
+        .form-group select,
+        .form-group input[type="number"] {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        .questions-container {
+            margin-top: 20px;
+        }
+
+        .question-group {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: white;
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .question-header h4 {
+            margin: 0;
+        }
+
+        .answer-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .answer-group label {
+            margin-right: 5px;
+            color: #555;
+        }
+
+        .add-question-button,
+        .submit-exam-button {
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        .add-question-button:hover,
+        .submit-exam-button:hover {
+            background-color: #218838;
+        }
+
+        .remove-question-button {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+        }
+
+        .remove-question-button:hover {
+            background-color: #c82333;
+        }
+
+        .correct-answer-radio {
+            margin-right: 5px;
+        }
+
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+
+        .flash-messages p {
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            text-align: center;
+        }
+
+        .flash-messages .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .flash-messages .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="web_logo" class="logo"></a>
+            <h1 class="inter-700 logo-title" id="logoTitle" data-url="{{ url_for('index') }}">LUYỆN THI ONLINE</h1>
+            {% if session['username'] %}
+            <div class="user-info" id="userInfo" data-user-url="{{ url_for('user_profile') }}">
+                <img src="{{ url_for('static', filename='images/account.png') }}" alt="user_avatar" class="user-avatar">
+                <span class="inter-600">{{ session['username'] }}</span>
+            </div>
+            {% else %}
+            <button class="auth-button inter-600 btn redirect-to-auth" data-auth-url="{{ url_for('login') }}">Đăng nhập</button>
+            {% endif %}
+        </div>
+    </header>
+    <nav class="nav">
+        <ul class="nav-list">
+            <li><a href="{{ url_for('index') }}" class="inter-600">Trang chủ</a></li>
+            <li><a href="{{ url_for('show_exams_page') }}" class="inter-600">Luyện đề</a></li>
+            <li><a href="{{ url_for('document') }}" class="inter-600">Tài liệu</a></li>
+            <li><a href="{{ url_for('contact') }}" class="inter-600">Liên hệ</a></li>
+        </ul>
+    </nav>
+    <main class="main main-exam">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <p class="{{ category }}">{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% endwith %}
+        <h2>{{ exam.name }}</h2>
+        <div class="exam-info">
+            <p><strong>Môn học:</strong> {{ exam.subject }}</p>
+            <p><strong>Lớp:</strong> {{ exam.grade }}</p>
+            <p><strong>Thời gian làm bài:</strong> {{ exam.duration }} phút</p>
+            <p><strong>Người tạo:</strong> {{ exam.creator_username }}</p>
+            <p><strong>Ngày tạo:</strong> {{ exam.created_at }}</p>
+        </div>
+
+        <ul class="questions-list">
+            {% for question_data in questions %}
+            <li class="question-item">
+                <h4>Câu {{ loop.index }}: {{ question_data['Câu hỏi'] }}</h4>
+                <ol class="answers-list" type="A">
+                    {% if question_data['Đáp án A'] %}
+                    <li class="answer-item{% if question_data['Đáp án đúng'] == 'A' %} correct-answer{% endif %}">
+                        {{ question_data['Đáp án A'] }}
+                        {% if question_data['Đáp án đúng'] == 'A' %} (Đáp án đúng){% endif %}
+                    </li>
+                    {% endif %}
+                    {% if question_data['Đáp án B'] %}
+                    <li class="answer-item{% if question_data['Đáp án đúng'] == 'B' %} correct-answer{% endif %}">
+                        {{ question_data['Đáp án B'] }}
+                        {% if question_data['Đáp án đúng'] == 'B' %} (Đáp án đúng){% endif %}
+                    </li>
+                    {% endif %}
+                    {% if question_data['Đáp án C'] %}
+                    <li class="answer-item{% if question_data['Đáp án đúng'] == 'C' %} correct-answer{% endif %}">
+                        {{ question_data['Đáp án C'] }}
+                        {% if question_data['Đáp án đúng'] == 'C' %} (Đáp án đúng){% endif %}
+                    </li>
+                    {% endif %}
+                    {% if question_data['Đáp án D'] %}
+                    <li class="answer-item{% if question_data['Đáp án đúng'] == 'D' %} correct-answer{% endif %}">
+                        {{ question_data['Đáp án D'] }}
+                        {% if question_data['Đáp án đúng'] == 'D' %} (Đáp án đúng){% endif %}
+                    </li>
+                    {% endif %}
+                </ol>
+            </li>
+            {% endfor %}
+        </ul>
+
+        {% if can_edit %}
+        <button class="edit-button" onclick="toggleEditForm()">Chỉnh sửa đề thi</button>
+        <div class="edit-form" id="editForm">
+            <h3>Chỉnh sửa đề thi</h3>
+            <form method="POST">
+                <div class="form-group">
+                    <label for="exam_name">Tên đề thi:</label>
+                    <input type="text" id="exam_name" name="exam_name" value="{{ exam.name }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="exam_subject">Môn học:</label>
+                    <select id="exam_subject" name="exam_subject" required>
+                        <option value="Toán" {% if exam.subject == 'Toán' %}selected{% endif %}>Toán</option>
+                        <option value="physics" {% if exam.subject == 'physics' %}selected{% endif %}>Lý</option>
+                        <option value="chemistry" {% if exam.subject == 'chemistry' %}selected{% endif %}>Hóa</option>
+                        <option value="literature" {% if exam.subject == 'literature' %}selected{% endif %}>Văn</option>
+                        <option value="english" {% if exam.subject == 'english' %}selected{% endif %}>Anh</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="exam_grade">Lớp:</label>
+                    <select id="exam_grade" name="exam_grade" required>
+                        <option value="10" {% if exam.grade == '10' %}selected{% endif %}>Lớp 10</option>
+                        <option value="11" {% if exam.grade == '11' %}selected{% endif %}>Lớp 11</option>
+                        <option value="12" {% if exam.grade == '12' %}selected{% endif %}>Lớp 12</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="exam_duration">Thời gian (phút):</label>
+                    <input type="number" id="exam_duration" name="exam_duration" value="{{ exam.duration }}" min="1" required>
+                </div>
+
+                <div class="questions-container" id="questionsContainer">
+                    {% for question_data in questions %}
+                    <div class="question-group">
+                        <div class="question-header">
+                            <h4>Câu {{ loop.index }}:</h4>
+                            <button type="button" class="remove-question-button" onclick="removeQuestion(this)">Xóa</button>
+                        </div>
+                        <div class="form-group">
+                            <label for="question_{{ loop.index }}">Nội dung câu hỏi:</label>
+                            <input type="text" id="question_{{ loop.index }}" name="questions" value="{{ question_data['Câu hỏi'] }}" required>
+                        </div>
+                        <div class="answer-group">
+                            <label for="answer_a_{{ loop.index }}">A, <input type="text" id="answer_a_{{ loop.index }}" name="answers[A]" value="{{ question_data['Đáp án A'] }}" required></label>
+                        </div>
+                        <div class="answer-group">
+                            <label for="answer_b_{{ loop.index }}">B, <input type="text" id="answer_b_{{ loop.index }}" name="answers[B]" value="{{ question_data['Đáp án B'] }}" required></label>
+                        </div>
+                        <div class="answer-group">
+                            <label for="answer_c_{{ loop.index }}">C, <input type="text" id="answer_c_{{ loop.index }}" name="answers[C]" value="{{ question_data['Đáp án C'] }}"></label>
+                        </div>
+                        <div class="answer-group">
+                            <label for="answer_d_{{ loop.index }}">D, <input type="text" id="answer_d_{{ loop.index }}" name="answers[D]" value="{{ question_data['Đáp án D'] }}"></label>
+                        </div>
+                        <div class="form-group">
+                            <label for="correct_answer_{{ loop.index }}">Đáp án đúng:</label>
+                            <select id="correct_answer_{{ loop.index }}" name="correct_answer" required>
+                                <option value="A" {% if question_data['Đáp án đúng'] == 'A' %}selected{% endif %}>A</option>
+                                <option value="B" {% if question_data['Đáp án đúng'] == 'B' %}selected{% endif %}>B</option>
+                                <option value="C" {% if question_data['Đáp án đúng'] == 'C' %}selected{% endif %}>C</option>
+                                <option value="D" {% if question_data['Đáp án đúng'] == 'D' %}selected{% endif %}>D</option>
+                            </select>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <button type="button" class="add-question-button" onclick="addQuestion()">+ Thêm câu hỏi</button>
+                <button type="submit" class="submit-exam-button">Cập nhật đề thi</button>
+            </form>
+        </div>
+        {% endif %}
+    </main>
+    <footer class="footer">
+        <ul class="footer-list">
+            <li><a href="{{ url_for('contact') }}" class="inter-600">Thông tin liên hệ</a></li>
+            <li><a href="" class="inter-600">Mạng xã hội</a></li>
+            <li><a href="" class="inter-600">Điều khoản sử dụng</a></li>
+            <li><a href="" class="inter-600">Chính sách bảo mật</a></li>
+        </ul>
+    </footer>
+    <script>
+        let questionCounter = {{ questions|length }};
+
+        function toggleEditForm() {
+            const editForm = document.getElementById('editForm');
+            editForm.classList.toggle('active');
+        }
+
+        function addQuestion() {
+            questionCounter++;
+            const questionsContainer = document.getElementById('questionsContainer');
+            const newQuestion = document.createElement('div');
+            newQuestion.classList.add('question-group');
+            newQuestion.innerHTML = `
+                <div class="question-header">
+                    <h4>Câu ${questionCounter}:</h4>
+                    <button type="button" class="remove-question-button" onclick="removeQuestion(this)">Xóa</button>
+                </div>
+                <div class="form-group">
+                    <label for="question_${questionCounter}">Nội dung câu hỏi:</label>
+                    <input type="text" id="question_${questionCounter}" name="questions" required>
+                </div>
+                <div class="answer-group">
+                    <label for="answer_a_${questionCounter}">A, <input type="text" id="answer_a_${questionCounter}" name="answers[A]" required></label>
+                </div>
+                <div class="answer-group">
+                    <label for="answer_b_${questionCounter}">B, <input type="text" id="answer_b_${questionCounter}" name="answers[B]" required></label>
+                </div>
+                <div class="answer-group">
+                    <label for="answer_c_${questionCounter}">C, <input type="text" id="answer_c_${questionCounter}" name="answers[C]"></label>
+                </div>
+                <div class="answer-group">
+                    <label for="answer_d_${questionCounter}">D, <input type="text" id="answer_d_${questionCounter}" name="answers[D]"></label>
+                </div>
+                <div class="form-group">
+                    <label for="correct_answer_${questionCounter}">Đáp án đúng:</label>
+                    <select id="correct_answer_${questionCounter}" name="correct_answer" required>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                    </select>
+                </div>
+            `;
+            questionsContainer.appendChild(newQuestion);
+        }
+
+        function removeQuestion(button) {
+            const questionGroup = button.parentNode.parentNode;
+            questionGroup.remove();
+            const allQuestionGroups = document.querySelectorAll('.question-group');
+            allQuestionGroups.forEach((group, index) => {
+                const header = group.querySelector('.question-header h4');
+                if (header) {
+                    header.textContent = `Câu ${index + 1}:`;
+                }
+                const questionLabel = group.querySelector('label[for^="question_"]');
+                if (questionLabel) {
+                    questionLabel.setAttribute('for', `question_${index + 1}`);
+                }
+                const questionInput = group.querySelector('input[id^="question_"]');
+                if (questionInput) {
+                    questionInput.setAttribute('id', `question_${index + 1}`);
+                }
+                const correctAnswerLabel = group.querySelector('label[for^="correct_answer_"]');
+                if (correctAnswerLabel) {
+                    correctAnswerLabel.setAttribute('for', `correct_answer_${index + 1}`);
+                }
+                const correctAnswerSelect = group.querySelector('select[id^="correct_answer_"]');
+                if (correctAnswerSelect) {
+                    correctAnswerSelect.setAttribute('id', `correct_answer_${index + 1}`);
+                }
+            });
+            questionCounter = allQuestionGroups.length;
+        }
+    </script>
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>

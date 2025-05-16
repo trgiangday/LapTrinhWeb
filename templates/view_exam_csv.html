@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xem đề thi: {{ exam.name }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .main-view-exam {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .exam-info {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+        }
+
+        .exam-info p {
+            margin-bottom: 8px;
+        }
+
+        .questions-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .question-item {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+        }
+
+        .question-item h4 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .answers-list {
+            list-style: none;
+            padding-left: 20px;
+        }
+
+        .answer-item {
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        .correct-answer {
+            font-weight: bold;
+            color: green;
+        }
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="web_logo" class="logo"></a>
+            <h1 class="inter-700 logo-title" id="logoTitle" data-url="{{ url_for('index') }}">LUYỆN THI ONLINE</h1>
+            {% if session['username'] %}
+            <div class="user-info" id="userInfo" data-user-url="{{ url_for('user_profile') }}">
+                <img src="{{ url_for('static', filename='images/account.png') }}" alt="user_avatar" class="user-avatar">
+                <span class="inter-600">{{ session['username'] }}</span>
+            </div>
+            {% else %}
+            <button class="auth-button inter-600 btn redirect-to-auth" data-auth-url="{{ url_for('login') }}">Đăng nhập</button>
+            {% endif %}
+        </div>
+    </header>
+    <nav class="nav">
+        <ul class="nav-list">
+            <li><a href="{{ url_for('index') }}" class="inter-600">Trang chủ</a></li>
+            <li><a href="{{ url_for('show_exams_page') }}" class="inter-600">Luyện đề</a></li>
+            <li><a href="{{ url_for('document') }}" class="inter-600">Tài liệu</a></li>
+            <li><a href="{{ url_for('contact') }}" class="inter-600">Liên hệ</a></li>
+        </ul>
+    </nav>
+    <main class="main main-view-exam">
+        <h2>{{ exam.name }}</h2>
+        <div class="exam-info">
+            <p>Môn học: {{ exam.subject }}</p>
+            <p>Lớp: {{ exam.grade }}</p>
+            <p>Thời gian làm bài: {{ exam.duration }} phút</p>
+            <p>Người tạo: {{ exam.creator_username }}</p>
+            <p>Ngày tạo: {{ exam.created_at }}</p>
+        </div>
+
+        <ul class="questions-list">
+            {% for question_data in questions %}
+            <li class="question-item">
+                <h4>Câu {{ loop.index }}: {{ question_data['Câu hỏi'] }}</h4>
+                <ol class="answers-list" type="A">
+                    {% if question_data['Đáp án A'] %}
+                    <li class="answer-item{% if question_data['Đáp án đúng'] == 'A' %} correct-answer{% endif %}">
+                        {{ question_data['Đáp án A'] }}
+                        {% if question_data['Đáp án đúng'] == 'A' %} (Đáp án đúng){% endif %}
+                    </li>
+                    {% endif %}
+                    {% if question_data['Đáp án B'] %}
+                    <li class="answer-item{% if question_data['Đáp án đúng'] == 'B' %} correct-answer{% endif %}">
+                        {{ question_data['Đáp án B'] }}
+                        {% if question_data['Đáp án đúng'] == 'B' %} (Đáp án đúng){% endif %}
+                    </li>
+                    {% endif %}
+                    {% if question_data['Đáp án C'] %}
+                    <li class="answer-item{% if question_data['Đáp án đúng'] == 'C' %} correct-answer{% endif %}">
+                        {{ question_data['Đáp án C'] }}
+                        {% if question_data['Đáp án đúng'] == 'C' %} (Đáp án đúng){% endif %}
+                    </li>
+                    {% endif %}
+                    {% if question_data['Đáp án D'] %}
+                    <li class="answer-item{% if question_data['Đáp án đúng'] == 'D' %} correct-answer{% endif %}">
+                        {{ question_data['Đáp án D'] }}
+                        {% if question_data['Đáp án đúng'] == 'D' %} (Đáp án đúng){% endif %}
+                    </li>
+                    {% endif %}
+                </ol>
+            </li>
+            {% endfor %}
+        </ul>
+    </main>
+    <footer class="footer">
+        <ul class="footer-list">
+            <li><a href="{{ url_for('contact') }}" class="inter-600">Thông tin liên hệ</a></li>
+            <li><a href="" class="inter-600">Mạng xã hội</a></li>
+            <li><a href="" class="inter-600">Điều khoản sử dụng</a></li>
+            <li><a href="" class="inter-600">Chính sách bảo mật</a></li>
+        </ul>
+    </footer>
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>

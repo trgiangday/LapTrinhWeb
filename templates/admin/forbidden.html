@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Truy cập bị từ chối</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .forbidden-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 80vh;
+            text-align: center;
+        }
+
+        .forbidden-heading {
+            font-size: 2em;
+            color: #dc3545; /* Màu đỏ cảnh báo */
+            margin-bottom: 20px;
+        }
+
+        .forbidden-message {
+            font-size: 1.1em;
+            color: #555;
+            margin-bottom: 30px;
+        }
+
+        .back-home-link {
+            color: #007bff;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .back-home-link:hover {
+            color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="forbidden-container">
+        <h1 class="forbidden-heading">Truy cập bị từ chối</h1>
+        <p class="forbidden-message">Bạn không có quyền truy cập trang này.</p>
+        <a href="{{ url_for('index') }}" class="back-home-link">Quay về trang chủ</a>
+    </div>
+</body>
+</html>
