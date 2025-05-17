@@ -25,11 +25,6 @@ ALLOWED_EXTENSIONS = {'csv'}
 app.secret_key = 'your_secret_key'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Cấu hình Google OAuth
-GOOGLE_CLIENT_ID = "541263464377-tov1471eb666h9tpifcao7bvclelrf3l.apps.googleusercontent.com"  # Thay bằng Client ID của bạn
-GOOGLE_CLIENT_SECRET = "GOCSPX-OcyoQIry2crosrf_pFHGOmOiVSV"  # Thay bằng Client Secret của bạn
-GOOGLE_REDIRECT_URI = "http://localhost:5000/callback"  # Đảm bảo khớp với URI trong Google Console
-GOOGLE_SCOPES = ['https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile', 'openid']
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
@@ -470,6 +465,141 @@ def start_class_exam(class_id, exam_id):
     # Bắt đầu bài thi (có thể thêm logic như set thời gian làm bài, etc.)
     return redirect(url_for('take_exam', exam_id=exam_id, from_class=class_id))
 
+@app.after_request
+def add_header(response):
+    response.headers['Cache-Control'] = 'no-store'
+    return response
+
+@app.route('/class/add_exam/<int:class_id>', methods=['POST'])
+def add_exam_to_class(class_id):
+    # Lấy exam_id từ form
+    exam_id = request.form.get('exam_id')
+    if not exam_id:
+        flash('Vui lòng chọn đề thi.', 'error')
+        return redirect(url_for('class_detail', class_id=class_id))
+
+    conn = get_db()
+    try:
+        # Kiểm tra exam đã được thêm chưa
+        existing = conn.execute('''
+            SELECT 1 FROM class_exams 
+            WHERE class_id = ? AND exam_id = ?
+        ''', (class_id, exam_id)).fetchone()
+        if existing:
+            flash('Đề thi đã được thêm vào lớp này', 'info')
+            return redirect(url_for('class_detail', class_id=class_id))
+
+        # Thêm exam vào lớp
+        conn.execute('''
+            INSERT INTO class_exams (class_id, exam_id, added_by, add_time) 
+            VALUES (?, ?, ?, datetime('now'))
+        ''', (class_id, exam_id, session['username']))
+        conn.commit()
+        flash('Đã thêm đề thi vào lớp học', 'success')
+    finally:
+        conn.close()
+    return redirect(url_for('class_detail', class_id=class_id))
+
+@app.route('/class/remove_member/<int:class_id>/<int:user_id>', methods=['POST'])
+def remove_member(class_id, user_id):
+    # Kiểm tra quyền giáo viên/admin
+    auth_check = teacher_or_admin_required()
+    if auth_check:
+        return auth_check
+
+    conn = get_db()
+    try:
+        # Kiểm tra xem người dùng có phải là thành viên của lớp không
+        is_member = conn.execute('''
+            SELECT 1 FROM class_members 
+            WHERE class_id = ? AND user_id = ?
+        ''', (class_id, user_id)).fetchone()
+        
+        if not is_member:
+            flash('Người dùng không phải là thành viên của lớp này', 'error')
+            return redirect(url_for('class_detail', class_id=class_id))
+
+        # Xóa thành viên khỏi lớp
+        conn.execute('''
+            DELETE FROM class_members 
+            WHERE class_id = ? AND user_id = ?
+        ''', (class_id, user_id))
+        conn.commit()
+        flash('Đã xóa học sinh khỏi lớp', 'success')
+    finally:
+        conn.close()
+    
+    return redirect(url_for('class_detail', class_id=class_id))
+
+@app.route('/class/attendance_report/<int:class_id>')
+def attendance_report(class_id):
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    conn = get_db()
+    try:
+        # Lấy thông tin lớp học - sửa lại câu truy vấn
+        class_info = conn.execute('''
+            SELECT c.*, u.username as creator_username 
+            FROM classes c 
+            JOIN users u ON c.creator_id = u.id 
+            WHERE c.id = ?
+        ''', (class_id,)).fetchone()
+
+        if not class_info:
+            flash('Không tìm thấy lớp học', 'error')
+            return redirect(url_for('class_page'))
+
+        # Lấy danh sách học sinh trong lớp
+        students = conn.execute('''
+            SELECT u.id, u.fullname, u.username
+            FROM class_members cm
+            JOIN users u ON cm.user_id = u.id
+            WHERE cm.class_id = ? AND cm.role = 'student'
+        ''', (class_id,)).fetchall()
+
+        # Lấy tất cả các ngày điểm danh
+        dates = conn.execute('''
+            SELECT DISTINCT date
+            FROM class_attendance
+            WHERE class_id = ?
+            ORDER BY date
+        ''', (class_id,)).fetchall()
+
+        # Lấy dữ liệu điểm danh cho từng học sinh
+        attendance_data = {}
+        for student in students:
+            attendance_data[student['id']] = {
+                'attendance': {},
+                'total_days': 0,
+                'total_present': 0
+            }
+
+            # Lấy điểm danh của học sinh này
+            records = conn.execute('''
+                SELECT date, status
+                FROM class_attendance
+                WHERE class_id = ? AND user_id = ?
+                ORDER BY date
+            ''', (class_id, student['id'])).fetchall()
+
+            for record in records:
+                attendance_data[student['id']]['attendance'][record['date']] = record['status']
+                attendance_data[student['id']]['total_days'] += 1
+                if record['status'] == 'present':
+                    attendance_data[student['id']]['total_present'] += 1
+
+        return render_template('attendance_report.html',
+                             class_info=class_info,
+                             students=students,
+                             dates=dates,
+                             attendance_data=attendance_data)
+
+    except Exception as e:
+        flash(f'Lỗi khi tải báo cáo điểm danh: {str(e)}', 'error')
+        return redirect(url_for('class_detail', class_id=class_id))
+    finally:
+        conn.close()
 @app.route('/contact')
 def contact():
     return render_template('contact.html')
@@ -1100,141 +1230,8 @@ def change_password():
 
 app.register_blueprint(admin_bp)
 
-@app.after_request
-def add_header(response):
-    response.headers['Cache-Control'] = 'no-store'
-    return response
 
-@app.route('/class/add_exam/<int:class_id>', methods=['POST'])
-def add_exam_to_class(class_id):
-    # Lấy exam_id từ form
-    exam_id = request.form.get('exam_id')
-    if not exam_id:
-        flash('Vui lòng chọn đề thi.', 'error')
-        return redirect(url_for('class_detail', class_id=class_id))
 
-    conn = get_db()
-    try:
-        # Kiểm tra exam đã được thêm chưa
-        existing = conn.execute('''
-            SELECT 1 FROM class_exams 
-            WHERE class_id = ? AND exam_id = ?
-        ''', (class_id, exam_id)).fetchone()
-        if existing:
-            flash('Đề thi đã được thêm vào lớp này', 'info')
-            return redirect(url_for('class_detail', class_id=class_id))
-
-        # Thêm exam vào lớp
-        conn.execute('''
-            INSERT INTO class_exams (class_id, exam_id, added_by, add_time) 
-            VALUES (?, ?, ?, datetime('now'))
-        ''', (class_id, exam_id, session['username']))
-        conn.commit()
-        flash('Đã thêm đề thi vào lớp học', 'success')
-    finally:
-        conn.close()
-    return redirect(url_for('class_detail', class_id=class_id))
-
-@app.route('/class/remove_member/<int:class_id>/<int:user_id>', methods=['POST'])
-def remove_member(class_id, user_id):
-    # Kiểm tra quyền giáo viên/admin
-    auth_check = teacher_or_admin_required()
-    if auth_check:
-        return auth_check
-
-    conn = get_db()
-    try:
-        # Kiểm tra xem người dùng có phải là thành viên của lớp không
-        is_member = conn.execute('''
-            SELECT 1 FROM class_members 
-            WHERE class_id = ? AND user_id = ?
-        ''', (class_id, user_id)).fetchone()
-        
-        if not is_member:
-            flash('Người dùng không phải là thành viên của lớp này', 'error')
-            return redirect(url_for('class_detail', class_id=class_id))
-
-        # Xóa thành viên khỏi lớp
-        conn.execute('''
-            DELETE FROM class_members 
-            WHERE class_id = ? AND user_id = ?
-        ''', (class_id, user_id))
-        conn.commit()
-        flash('Đã xóa học sinh khỏi lớp', 'success')
-    finally:
-        conn.close()
-    
-    return redirect(url_for('class_detail', class_id=class_id))
-
-@app.route('/class/attendance_report/<int:class_id>')
-def attendance_report(class_id):
-    if 'username' not in session:
-        return redirect(url_for('login'))
-
-    conn = get_db()
-    try:
-        # Lấy thông tin lớp học - sửa lại câu truy vấn
-        class_info = conn.execute('''
-            SELECT c.*, u.username as creator_username 
-            FROM classes c 
-            JOIN users u ON c.creator_id = u.id 
-            WHERE c.id = ?
-        ''', (class_id,)).fetchone()
-
-        if not class_info:
-            flash('Không tìm thấy lớp học', 'error')
-            return redirect(url_for('class_page'))
-
-        # Lấy danh sách học sinh trong lớp
-        students = conn.execute('''
-            SELECT u.id, u.fullname, u.username
-            FROM class_members cm
-            JOIN users u ON cm.user_id = u.id
-            WHERE cm.class_id = ? AND cm.role = 'student'
-        ''', (class_id,)).fetchall()
-
-        # Lấy tất cả các ngày điểm danh
-        dates = conn.execute('''
-            SELECT DISTINCT date
-            FROM class_attendance
-            WHERE class_id = ?
-            ORDER BY date
-        ''', (class_id,)).fetchall()
-
-        # Lấy dữ liệu điểm danh cho từng học sinh
-        attendance_data = {}
-        for student in students:
-            attendance_data[student['id']] = {
-                'attendance': {},
-                'total_days': 0,
-                'total_present': 0
-            }
-
-            # Lấy điểm danh của học sinh này
-            records = conn.execute('''
-                SELECT date, status
-                FROM class_attendance
-                WHERE class_id = ? AND user_id = ?
-                ORDER BY date
-            ''', (class_id, student['id'])).fetchall()
-
-            for record in records:
-                attendance_data[student['id']]['attendance'][record['date']] = record['status']
-                attendance_data[student['id']]['total_days'] += 1
-                if record['status'] == 'present':
-                    attendance_data[student['id']]['total_present'] += 1
-
-        return render_template('attendance_report.html',
-                             class_info=class_info,
-                             students=students,
-                             dates=dates,
-                             attendance_data=attendance_data)
-
-    except Exception as e:
-        flash(f'Lỗi khi tải báo cáo điểm danh: {str(e)}', 'error')
-        return redirect(url_for('class_detail', class_id=class_id))
-    finally:
-        conn.close()
 
 if __name__ == '__main__':
     app.run(debug=True)
